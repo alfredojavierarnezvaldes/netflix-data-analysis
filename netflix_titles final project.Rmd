@@ -2,7 +2,10 @@
 title: "Netflix Data Analysis"
 author: "Alfredo Javier Arnez Valdés"
 date: "2026-03-26"
-output: html_document
+output: 
+  html_document:
+    theme: cosmo
+    toc: true
 ---
 
 ```{r setup, include=FALSE}
@@ -23,7 +26,7 @@ The goal is to provide data-driven insights into how content strategies may have
 
 ```{r}
 netflix <- read.csv("netflix_titles.csv")
-head(netflix)
+knitr::kable(head(netflix, 10))
 ```
 
 ## 3. Data Cleaning
@@ -50,26 +53,29 @@ summary(netflix)
 
 ## 4. Exploratory Data Analysis
 
-```{r}
+```{r, echo=FALSE}
 netflix %>%
-  count(type)
+  count(type) %>%
+  head(10)
 ```
 
-```{r}
+```{r, echo=FALSE}
 netflix %>%
-  count(release_year)
+  count(release_year) %>%
+  head(10)
 ```
 
-```{r}
+```{r, echo=FALSE}
 netflix %>%
-  count(country, sort = TRUE)
+  count(country, sort = TRUE) %>%
+  head(10)
 ```
 
 
 
 ## 5. Visualizations
 
-```{r}
+```{r, echo=FALSE, message=FALSE}
 netflix %>%
   count(type) %>%
   ggplot(aes(x = type, y = n, fill = type)) +
@@ -81,7 +87,7 @@ netflix %>%
   ) +
   theme_minimal()
 ```
-```{r}
+```{r, echo=FALSE, message=FALSE}
 netflix %>%
   count(release_year) %>%
   ggplot(aes(x = release_year, y = n)) +
@@ -94,7 +100,7 @@ netflix %>%
   ) +
   theme_minimal()
 ```
-```{r}
+```{r, echo=FALSE, message=FALSE}
 netflix %>%
   filter(country != "Unknown") %>%
   count(country, sort = TRUE) %>%
@@ -108,7 +114,7 @@ netflix %>%
   ) +
   theme_minimal()
 ```
-```{r}
+```{r, echo=FALSE, message=FALSE}
 netflix %>%
   count(rating) %>%
   ggplot(aes(x = reorder(rating, n), y = n)) +
@@ -121,7 +127,7 @@ netflix %>%
   ) +
   theme_minimal()
 ```
-```{r}
+```{r, echo=FALSE, message=FALSE}
 netflix %>%
   count(release_year, type) %>%
   ggplot(aes(x = release_year, y = n, color = type)) +
