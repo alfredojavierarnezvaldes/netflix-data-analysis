@@ -1,0 +1,150 @@
+---
+title: "Netflix Data Analysis"
+author: "Alfredo Javier Arnez Valdés"
+date: "2026-03-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(lubridate)
+library(janitor)
+```
+
+# Netflix Data Analysis
+
+## 1. Introduction
+
+This project explores a dataset from a streaming platform to uncover patterns in content distribution and production trends. By applying data cleaning techniques and exploratory data analysis in R, the study examines the composition of the catalog, focusing on differences between movies and TV shows, as well as their evolution over time.
+
+The goal is to provide data-driven insights into how content strategies may have shifted, particularly in response to the rapid growth of the streaming industry.
+
+## 2. Data Loading
+
+```{r}
+netflix <- read.csv("netflix_titles.csv")
+head(netflix)
+```
+
+## 3. Data Cleaning
+
+```{r}
+colSums(is.na(netflix))
+``` 
+```{r}
+colSums(netflix == "")
+```
+```{r}
+netflix$country[netflix$country == ""] <- "Unknown"
+```
+```{r}
+netflix <- netflix %>%
+  filter(rating != "", duration != "")
+```
+
+Missing values were identified in several columns. Columns with a high proportion of missing data (director, cast) were not used in the analysis. For the variable country, missing values were labeled as "Unknown", while records with missing values in rating and duration were removed due to their low frequency.
+
+```{r}
+summary(netflix)
+```
+
+## 4. Exploratory Data Analysis
+
+```{r}
+netflix %>%
+  count(type)
+```
+
+```{r}
+netflix %>%
+  count(release_year)
+```
+
+```{r}
+netflix %>%
+  count(country, sort = TRUE)
+```
+
+
+
+## 5. Visualizations
+
+```{r}
+netflix %>%
+  count(type) %>%
+  ggplot(aes(x = type, y = n, fill = type)) +
+  geom_col() +
+  labs(
+    title = "Distribution of Content Type",
+    x = "Type",
+    y = "Count"
+  ) +
+  theme_minimal()
+```
+```{r}
+netflix %>%
+  count(release_year) %>%
+  ggplot(aes(x = release_year, y = n)) +
+  geom_line() +
+  geom_smooth(se = FALSE) +
+  labs(
+    title = "Content Growth Trend",
+    x = "Year",
+    y = "Titles"
+  ) +
+  theme_minimal()
+```
+```{r}
+netflix %>%
+  filter(country != "Unknown") %>%
+  count(country, sort = TRUE) %>%
+  head(10) %>%
+  ggplot(aes(x = reorder(country, n), y = n)) +
+  geom_col() + coord_flip() +
+  labs(
+    title = "Top 10 Countries (Excluding Unknown)",
+    x = "Country",
+    y = "Number of Titles"
+  ) +
+  theme_minimal()
+```
+```{r}
+netflix %>%
+  count(rating) %>%
+  ggplot(aes(x = reorder(rating, n), y = n)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Distribution of Content Ratings",
+    x = "Rating",
+    y = "Count"
+  ) +
+  theme_minimal()
+```
+```{r}
+netflix %>%
+  count(release_year, type) %>%
+  ggplot(aes(x = release_year, y = n, color = type)) +
+  geom_line(alpha = 0.6) +
+  geom_smooth(se = FALSE) +
+  labs(
+    title = "Trend of Movies vs TV Shows Over Time",
+    x = "Year",
+    y = "Titles"
+  ) +
+  theme_minimal()
+```
+
+## 6. Conclusions
+
+The analysis of the streaming dataset reveals several important insights. The catalog is predominantly composed of movies, indicating a strong focus on high-volume content.
+
+From a geographical perspective, the United States leads content production, followed by India. However, a significant portion of the data is categorized as "Unknown", which may introduce limitations in geographical analysis.
+
+In terms of temporal trends, both movies and TV shows experienced substantial growth during the late 2010s. Notably, movies appear to have reached a peak and slightly declined, while TV shows continue to grow steadily, suggesting a shift in platform strategy toward serialized content.
+
+Overall, the findings highlight both the expansion of the streaming industry and evolving content preferences.
+
+## Limitations
+
+This analysis is subject to certain limitations. The presence of missing or incomplete data, particularly in the "country" variable, may affect the accuracy of geographical insights. Additionally, the dataset only includes information up to 2021, which may not reflect recent trends in the streaming industry.
