@@ -18,9 +18,9 @@ library(janitor)
 
 ## 1. Introduction
 
-This project explores a dataset from a streaming platform to uncover patterns in content distribution and production trends. By applying data cleaning techniques and exploratory data analysis in R, the study examines the composition of the catalog, focusing on differences between movies and TV shows, as well as their evolution over time.
+This project explores a Netflix titles dataset to identify patterns in catalog composition and the distribution of titles across release years and countries. Using R, the analysis applies data cleaning techniques, exploratory data analysis, and data visualization to examine differences between movies and TV shows.
 
-The goal is to provide data-driven insights into how content strategies may have shifted, particularly in response to the rapid growth of the streaming industry.
+The objective is to summarize the patterns observed in the available data while recognizing the limitations of the dataset. The analysis describes historical catalog information and does not attempt to establish the causes of observed trends or infer changes in Netflix's content strategy
 
 ## 2. Data Loading
 
@@ -35,17 +35,12 @@ knitr::kable(head(netflix, 10))
 colSums(is.na(netflix))
 ``` 
 ```{r}
-colSums(netflix == "")
+colSums(netflix == "", na.rm = TRUE)
 ```
 ```{r}
 netflix$country[netflix$country == ""] <- "Unknown"
 ```
-```{r}
-netflix <- netflix %>%
-  filter(rating != "", duration != "")
-```
-
-Missing values were identified in several columns. Columns with a high proportion of missing data (director, cast) were not used in the analysis. For the variable country, missing values were labeled as "Unknown", while records with missing values in rating and duration were removed due to their low frequency.
+Missing values were identified in several columns. The director and cast columns contained numerous empty entries and were not used in the analysis. For the country variable, empty entries were labeled as "Unknown". No missing values or empty strings were detected in the rating and duration columns at this stage of the analysis.
 
 ```{r}
 summary(netflix)
@@ -61,17 +56,17 @@ netflix %>%
 
 ```{r, echo=FALSE}
 netflix %>%
-  count(release_year) %>%
+  count(release_year, sort = TRUE) %>%
   head(10)
 ```
 
 ```{r, echo=FALSE}
 netflix %>%
+  tidyr::separate_rows(country, sep = ",\\s*") %>%
   count(country, sort = TRUE) %>%
   head(10)
 ```
-
-
+The dataset contains both movies and TV shows, allowing for a comparison of the two content types. The most frequently represented release years include 2017, 2018, and 2019, with 2018 having the highest number of titles among the ten years displayed. Regarding country associations, the United States appears most frequently, followed by India and the United Kingdom. Since some titles are associated with multiple countries, these counts represent title-country associations rather than exclusive production totals. The "Unknown" category indicates that country information is unavailable for some titles. The dataset records additions to Netflix's catalog only through September 25, 2021, which is important when interpreting patterns in recent release years.
 
 ## 5. Visualizations
 
@@ -92,25 +87,26 @@ netflix %>%
   count(release_year) %>%
   ggplot(aes(x = release_year, y = n)) +
   geom_line() +
-  geom_smooth(se = FALSE) +
   labs(
-    title = "Content Growth Trend",
-    x = "Year",
-    y = "Titles"
+    title = "Number of Titles by Release Year",
+    x = "Release Year",
+    y = "Number of Titles"
   ) +
   theme_minimal()
 ```
 ```{r, echo=FALSE, message=FALSE}
 netflix %>%
+  tidyr::separate_rows(country, sep = ",\\s*") %>%
   filter(country != "Unknown") %>%
   count(country, sort = TRUE) %>%
   head(10) %>%
   ggplot(aes(x = reorder(country, n), y = n)) +
-  geom_col() + coord_flip() +
+  geom_col() +
+  coord_flip() +
   labs(
-    title = "Top 10 Countries (Excluding Unknown)",
+    title = "Top 10 Countries by Title Associations",
     x = "Country",
-    y = "Number of Titles"
+    y = "Number of Title Associations"
   ) +
   theme_minimal()
 ```
@@ -131,26 +127,29 @@ netflix %>%
 netflix %>%
   count(release_year, type) %>%
   ggplot(aes(x = release_year, y = n, color = type)) +
-  geom_line(alpha = 0.6) +
-  geom_smooth(se = FALSE) +
+  geom_line(alpha = 0.7) +
   labs(
-    title = "Trend of Movies vs TV Shows Over Time",
-    x = "Year",
-    y = "Titles"
+    title = "Movies vs TV Shows by Release Year",
+    x = "Release Year",
+    y = "Number of Titles",
+    color = "Content Type"
   ) +
   theme_minimal()
 ```
 
+The content type distribution shows the representation of movies and TV shows in the dataset. Title counts vary across release years, with the highest counts concentrated in the late 2010s among the years displayed. Movies appear more frequently than TV shows across much of the period analyzed. The country comparison identifies the United States as the country most frequently associated with titles, followed by India and the United Kingdom, excluding records labeled as "Unknown". Content ratings also vary in frequency across the catalog.The dataset's latest recorded catalog addition date is September 25, 2021, so the lower counts in recent release years should not be interpreted as conclusive evidence of declining content production.. These visualizations describe the available data and do not establish the causes of the observed patterns.
+
 ## 6. Conclusions
 
-The analysis of the streaming dataset reveals several important insights. The catalog is predominantly composed of movies, indicating a strong focus on high-volume content.
+The analysis provides an overview of the composition and distribution of titles in the Netflix dataset.
 
-From a geographical perspective, the United States leads content production, followed by India. However, a significant portion of the data is categorized as "Unknown", which may introduce limitations in geographical analysis.
+Movies represent a larger share of the catalog than TV shows. From a geographical perspective, the United States has the highest number of title-country associations, followed by India and the United Kingdom. Some records have an "Unknown" country classification, which limits the completeness of the geographical analysis.
 
-In terms of temporal trends, both movies and TV shows experienced substantial growth during the late 2010s. Notably, movies appear to have reached a peak and slightly declined, while TV shows continue to grow steadily, suggesting a shift in platform strategy toward serialized content.
+Title counts vary across release years, with high counts during the late 2010s among the years represented. Movies appear more frequently than TV shows across much of the period analyzed. However, the dataset only records catalog additions through September 25, 2021, and the lower counts in recent release years cannot, by themselves, establish a decline in Netflix's production or a change in its content strategy.
 
-Overall, the findings highlight both the expansion of the streaming industry and evolving content preferences.
+Overall, the findings describe patterns in a historical snapshot of the available catalog and should be interpreted in light of its temporal and data limitations.
 
 ## Limitations
 
-This analysis is subject to certain limitations. The presence of missing or incomplete data, particularly in the "country" variable, may affect the accuracy of geographical insights. Additionally, the dataset only includes information up to 2021, which may not reflect recent trends in the streaming industry.
+This analysis has several limitations. First, some records lack country information, which may affect the completeness of geographical comparisons. Second, the dataset's date_added field ranges from January 1, 2008, to September 25, 2021. Therefore, the dataset does not reflect additions to the Netflix catalog after that date and may not represent current catalog conditions. Finally, the analysis describes patterns in the available data and does not establish the causes behind changes in title counts or viewer preferences.
+
